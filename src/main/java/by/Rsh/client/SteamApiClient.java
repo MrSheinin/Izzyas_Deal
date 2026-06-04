@@ -1,4 +1,4 @@
-package by.Rsh.dto;
+package by.Rsh.client;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,17 +48,8 @@ public class SteamApiClient {
 
     //=====PARAMETERIZED REQUESTS=====
 
-    public String getPosterLink(Long appId){
-        try {
-            return client
-                    .get()
-                    .uri("https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{appId}/library_600x900.jpg", appId)
-                    .retrieve()
-                    .body(String.class);
-        } catch (Exception e) {
-            logger.error("Failed to fetch poster link for appId {}: {}", appId, e.getMessage(), e);
-        }
-        return null;
+    public String getPosterLink(Long appId) {
+        return String.format("https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{appId}/library_600x900.jpg", appId);
     }
 
     public String getMarketData(List<Long> appIds){
@@ -82,7 +73,7 @@ public class SteamApiClient {
         try {
             return client
                     .get()
-                    .uri("https://store.steampowered.com/api/appdetails?appids={appId}&cc=eu&l=ru", appId)
+                    .uri("https://store.steampowered.com/api/appdetails?appids={appId}&cc=eu&l=en", appId)
                     .retrieve()
                     .body(String.class);
         } catch (Exception e) {
