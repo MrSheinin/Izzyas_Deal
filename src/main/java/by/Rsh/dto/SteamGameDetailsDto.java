@@ -12,10 +12,10 @@ public class SteamGameDetailsDto {
     String type;
     String description;
     Integer recommendations;
-    boolean windows;
-    boolean mac;
-    boolean linux;
-    boolean isComingSoon;
+    Boolean windows;
+    Boolean mac;
+    Boolean linux;
+    Boolean isComingSoon;
     LocalDate releaseDateParsed;
     String headerImageUrl;
 }

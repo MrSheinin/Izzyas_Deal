@@ -1,13 +1,12 @@
 package by.Rsh.database.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -17,6 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "game_market_data")
+@EntityListeners(AuditingEntityListener.class)
 
 public class GameMarketDataEntity {
     @Id

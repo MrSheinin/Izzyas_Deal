@@ -13,10 +13,14 @@ import java.util.stream.Collectors;
 
 public class SteamApiClient {
     private static final Logger logger = LoggerFactory.getLogger(SteamApiClient.class);
-    private final RestClient client = RestClient.create();
 
-    @Value("${steam.api.key}")
+    private final RestClient client;
     private String apiKey;
+
+    public SteamApiClient(@Value("${steam.api.key}") String apiKey) {
+        this.apiKey = apiKey;
+        this.client = RestClient.builder().build();
+    }
 
     //=====PARAMETERLESS REQUESTS=====
 
@@ -49,7 +53,7 @@ public class SteamApiClient {
     //=====PARAMETERIZED REQUESTS=====
 
     public String getPosterLink(Long appId) {
-        return String.format("https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{appId}/library_600x900.jpg", appId);
+        return String.format("https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/%d/library_600x900.jpg", appId);
     }
 
     public String getMarketData(List<Long> appIds){
@@ -60,7 +64,7 @@ public class SteamApiClient {
 
             return client
                     .get()
-                    .uri("https://store.steampowered.com/api/appdetails?appids={ids}&cc=eu&l=ru&filters=price_overview", idsParam)
+                    .uri("https://store.steampowered.com/api/appdetails?appids={ids}&cc=eu&l=en&filters=price_overview", idsParam)
                     .retrieve()
                     .body(String.class);
         } catch (Exception e) {

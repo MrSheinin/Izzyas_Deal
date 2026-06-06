@@ -1,14 +1,18 @@
 package by.Rsh.database.entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -16,17 +20,20 @@ import java.time.LocalDate;
 @Builder
 @Entity
 @Table(name = "games")
+@EntityListeners(AuditingEntityListener.class)
 public class GameEntity {
     @Id
-    Long appId;
-    String name;
-    String type;
-    String description;
-    Integer recommendations;
-    boolean windows;
-    boolean mac;
-    boolean linux;
-    boolean isComingSoon;
-    LocalDate releaseDateParsed;
-    String headerImageUrl;
+    private Long appId;
+    private String name;
+    private String type;
+    private String description;
+    private Integer recommendations;
+    private Boolean windows;
+    private Boolean mac;
+    private Boolean linux;
+    private Boolean isComingSoon;
+    private LocalDate releaseDateParsed;
+    private String headerImageUrl;
+    @CreatedDate
+    private LocalDateTime createdAt;
 }
