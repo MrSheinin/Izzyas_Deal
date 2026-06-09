@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "game_market_data")
-@EntityListeners(AuditingEntityListener.class)
 
 public class GameMarketDataEntity {
     @Id

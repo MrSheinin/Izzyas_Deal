@@ -6,11 +6,13 @@ import by.Rsh.dto.SteamGameDetailsDto;
 import by.Rsh.dto.SteamPriceDto;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 
 @Component
 public class ToEntityMappers {
     public GameEntity toEntity(Long appId, SteamGameDetailsDto dto){
+        if (dto == null) {
+            return null;
+        }
         return GameEntity.builder()
                 .appId(appId)
                 .name(dto.getName())
@@ -27,12 +29,15 @@ public class ToEntityMappers {
     }
 
     public GameMarketDataEntity toEntity(Long appId, SteamPriceDto dto){
+        if (dto == null) {
+            return null;
+        }
         return GameMarketDataEntity.builder()
                 .appId(appId)
                 .initialPrice(dto.getInitialPrice())
                 .finalPrice(dto.getFinalPrice())
                 .discountPercent(dto.getDiscountPercent())
-                .updatedAt(LocalDateTime.now())
+
                 .build();
     }
 }
