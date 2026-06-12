@@ -1,9 +1,6 @@
 package by.Rsh.mapper;
 
-import by.Rsh.dto.SteamGameDetailsDto;
-import by.Rsh.dto.SteamGameIdsDto;
-import by.Rsh.dto.SteamPriceBatchDto;
-import by.Rsh.dto.SteamPriceDto;
+import by.Rsh.dto.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -86,14 +83,14 @@ public class SteamJsonMappers {
         }
     }
 
-    public SteamGameDetailsDto toSteamGameDetailsDto(String json){
-        if (json == null || json.isBlank()){
+    public SteamGameDetailsDto toSteamGameDetailsDto(String json) {
+        if (json == null || json.isBlank()) {
             return null;
         }
 
         try {
             JsonNode rootNode = objectMapper.readTree(json);
-            if (!rootNode.fieldNames().hasNext()){
+            if (!rootNode.fieldNames().hasNext()) {
                 return null;
             }
 
@@ -111,7 +108,7 @@ public class SteamJsonMappers {
             boolean linux = platforms.path("linux").asBoolean(false);
 
             Integer recommendations = null;
-            if (dataNode.has("recommendations")){
+            if (dataNode.has("recommendations")) {
                 recommendations = dataNode.path("recommendations").path("total").asInt();
             }
 
@@ -119,6 +116,25 @@ public class SteamJsonMappers {
             String rawReleaseDate = releaseDate.path("date").asText("");
             boolean isComingSoon = releaseDate.path("coming_soon").asBoolean(false);
             LocalDate releaseDateParsed = parseSteamDate(rawReleaseDate, isComingSoon);
+
+            List<SteamGenreDto> genres = new ArrayList<>();
+            JsonNode genresNode = dataNode.path("genres");
+            if (genresNode.isArray()) {
+                for (JsonNode genreNode : genresNode) {
+                    try {
+                        Long id = Long.parseLong(genreNode.path("id").asText());
+                        String name = genreNode.path("description").asText("Unknown");
+
+                        genres.add(SteamGenreDto.builder()
+                                .genreId(id)
+                                .name(name)
+                                .build());
+                    } catch (NumberFormatException e) {
+                        logger.error("Failed to parse genre ID: {}", genreNode.path("id").asText());
+                    }
+                }
+            }
+
 
             String posterUrl = String.format("https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/%s/library_600x900.jpg", appId);
 
@@ -133,6 +149,7 @@ public class SteamJsonMappers {
                     .isComingSoon(isComingSoon)
                     .releaseDateParsed(releaseDateParsed)
                     .headerImageUrl(posterUrl)
+                    .genres(genres)
                     .build();
         } catch (IOException e) {
             logger.error("Failed to map Steam game details JSON: {}", e.getMessage(), e);
@@ -167,8 +184,8 @@ public class SteamJsonMappers {
         }
     }
 
-    private LocalDate parseSteamDate(String dateStr, boolean isComingSoon){
-        if (isComingSoon || dateStr == null || dateStr.isBlank()){
+    private LocalDate parseSteamDate(String dateStr, boolean isComingSoon) {
+        if (dateStr == null || dateStr.isBlank()) {
             return null;
         }
         try {

@@ -19,4 +19,8 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
     List<GameEntity> findByMacTrue();
     List<GameEntity> findByLinuxTrue();
 
-    List<GameEntity> findByType(String type);}
+    List<GameEntity> findByType(String type);
+
+    List<GameEntity> findByGenresGenreId(Long genreId);
+}
+

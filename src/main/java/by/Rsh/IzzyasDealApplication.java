@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
-@EnableJpaAuditing
 public class IzzyasDealApplication {
     public static void main(String[] args) {
         SpringApplication.run(IzzyasDealApplication.class, args);
