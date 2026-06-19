@@ -2,8 +2,8 @@ package by.Rsh.mapper.create;
 
 import by.Rsh.database.entity.GameEntity;
 import by.Rsh.database.entity.GameMarketDataEntity;
-import by.Rsh.dto.SteamGameDetailsDto;
-import by.Rsh.dto.SteamPriceDto;
+import by.Rsh.dto.dataIngestion.SteamGameDetailsDto;
+import by.Rsh.dto.dataIngestion.SteamPriceDto;
 import org.springframework.stereotype.Component;
 
 
