@@ -16,8 +16,6 @@ public class GameSearchFilterDto {
 
     private Integer startReleaseYear;
 
-    private Boolean sortByRecommendations;
-
     private Integer minPrice;
     private Integer maxPrice;
 }

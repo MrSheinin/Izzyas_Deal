@@ -3,6 +3,8 @@ DROP TABLE IF EXISTS genres;
 DROP TABLE IF EXISTS game_market_data;
 DROP TABLE IF EXISTS games;
 
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 CREATE TABLE games
 (
     app_id bigint primary key,
@@ -48,3 +50,5 @@ CREATE INDEX idx_games_recommendations ON games(recommendations);
 CREATE INDEX idx_market_updated_at ON game_market_data(updated_at);
 
 CREATE INDEX idx_games_genres_genre_id ON games_genres(genre_id);
+
+CREATE INDEX IF NOT EXISTS idx_games_name_trgm ON games USING gist (name gist_trgm_ops);
