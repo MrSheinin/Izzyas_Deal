@@ -10,7 +10,7 @@ import by.Rsh.dto.dataDelivery.GameDetailsDto;
 import by.Rsh.dto.dataFromUser.GameSearchFilterDto;
 import by.Rsh.mapper.read.ToDeliveryDtoMappers;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -30,32 +30,32 @@ public class GameCatalogueService {
     //==========================
     // -BASIC METHODS (HEADER)-
     //==========================
-    public List<GameCardDto> getActualGames() {
-        List<GameEntity> games = gameRepository.findTop50ByIsComingSoonFalseOrderByReleaseDateParsedDesc();
-        return mapGamesToCardDto(games);
+    public Page<GameCardDto> getActualGames(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return mapGamesToCardDto(gameRepository.findByIsComingSoonFalseOrderByReleaseDateParsedDesc(pageable), pageable);
     }
 
-    public List<GameCardDto> getAllGamesWithAnyDiscount() {
-        List<GameEntity> games = gameRepository.findGamesWithAnyDiscount();
-        return mapGamesToCardDto(games);
+    public Page<GameCardDto> getAllGamesWithAnyDiscount(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return mapGamesToCardDto(gameRepository.findGamesWithAnyDiscount(pageable), pageable);
     }
 
-    public List<GameCardDto> getGamesByMinDiscount(Integer minDiscount) {
-        List<GameEntity> games = gameRepository.findGamesByMinDiscount(minDiscount);
-        return mapGamesToCardDto(games);
+    public Page<GameCardDto> getGamesByMinDiscount(Integer minDiscount, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return mapGamesToCardDto(gameRepository.findGamesByMinDiscount(minDiscount, pageable), pageable);
     }
 
-    public List<GameCardDto> getGamesByMaxPrice(Integer maxPrice) {
-        List<GameEntity> games = gameRepository.findGamesByMaxPrice(maxPrice * 100);
-        return mapGamesToCardDto(games);
+    public Page<GameCardDto> getGamesByMaxPrice(Integer maxPrice, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return mapGamesToCardDto(gameRepository.findGamesByMaxPrice(maxPrice * 100, pageable), pageable);
     }
 
 
     //======================
     // -SPECIFIED FILTER-
     //======================
-    public List<GameCardDto> getGamesBySpecifiedFilter(GameSearchFilterDto filterDto) {
-        if (filterDto == null) return getActualGames();
+    public Page<GameCardDto> getGamesBySpecifiedFilter(GameSearchFilterDto filterDto, int page, int size) {
+        if (filterDto == null) return getActualGames(page, size);
 
         Specification<GameEntity> spec = Specification.where(GameSpecs.isNotComingSoon());
 
@@ -70,9 +70,9 @@ public class GameCatalogueService {
 
         Sort sort = Sort.by(Sort.Order.desc("recommendations").nullsLast());
 
-        List<GameEntity> filteredGames = gameRepository.findAll(spec, sort);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-        return mapGamesToCardDto(filteredGames);
+        return mapGamesToCardDto(gameRepository.findAll(spec, pageable), pageable);
     }
 
     //======================
@@ -117,5 +117,10 @@ public class GameCatalogueService {
         return games.stream()
                 .map(game -> mappers.toGameCard(game, priceMap.get(game.getAppId())))
                 .toList();
+    }
+
+    private Page<GameCardDto> mapGamesToCardDto(Page<GameEntity> gamesPage, Pageable pageable) {
+        List<GameCardDto> dtos = mapGamesToCardDto(gamesPage.getContent());
+        return new PageImpl<>(dtos, pageable, gamesPage.getTotalElements());
     }
 }

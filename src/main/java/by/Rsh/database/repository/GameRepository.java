@@ -1,6 +1,8 @@
 package by.Rsh.database.repository;
 
 import by.Rsh.database.entity.GameEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -22,7 +24,7 @@ public interface GameRepository extends JpaRepository<GameEntity, Long>, JpaSpec
                 WHERE m.discountPercent >= :minDiscount
                 ORDER BY m.discountPercent DESC, g.recommendations DESC NULLS LAST
             """)
-    List<GameEntity> findGamesByMinDiscount(@Param("minDiscount") Integer minDiscount);
+    Page<GameEntity> findGamesByMinDiscount(@Param("minDiscount") Integer minDiscount, Pageable pageable);
 
     @Query("""
                 SELECT DISTINCT g FROM GameEntity g
@@ -30,7 +32,7 @@ public interface GameRepository extends JpaRepository<GameEntity, Long>, JpaSpec
                 WHERE m.finalPrice <= :maxPrice AND m.finalPrice > 0
                 ORDER BY g.recommendations DESC NULLS LAST
             """)
-    List<GameEntity> findGamesByMaxPrice(@Param("maxPrice") Integer maxPrice);
+    Page<GameEntity> findGamesByMaxPrice(@Param("maxPrice") Integer maxPrice, Pageable pageable);
 
     @Query("""
                 SELECT DISTINCT g FROM GameEntity g
@@ -38,9 +40,9 @@ public interface GameRepository extends JpaRepository<GameEntity, Long>, JpaSpec
                 WHERE m.discountPercent > 0
                 ORDER BY m.discountPercent DESC, g.recommendations DESC NULLS LAST
             """)
-    List<GameEntity> findGamesWithAnyDiscount();
+    Page<GameEntity> findGamesWithAnyDiscount(Pageable pageable);
 
-    List<GameEntity> findTop50ByIsComingSoonFalseOrderByReleaseDateParsedDesc();
+    Page<GameEntity> findByIsComingSoonFalseOrderByReleaseDateParsedDesc(Pageable pageable);
 
     @Query(value = """
             SELECT g.* FROM games g
@@ -56,6 +58,6 @@ public interface GameRepository extends JpaRepository<GameEntity, Long>, JpaSpec
             """, nativeQuery = true)
     List<GameEntity> findBySimilarName(@Param("searchQuery") String searchQuery);
 
-    List<GameEntity> findByGenresGenreId(Long genreId);
+    Page<GameEntity> findByGenresGenreId(Long genreId, Pageable pageable);
 }
 
