@@ -19,15 +19,15 @@ public interface GameRepository extends JpaRepository<GameEntity, Long>, JpaSpec
     Set<Long> findAllIds();
 
     @Query("""
-                SELECT DISTINCT g FROM GameEntity g
+                SELECT g FROM GameEntity g
                 JOIN GameMarketDataEntity m ON g.appId = m.appId
-                WHERE m.discountPercent >= :minDiscount
+                WHERE m.discountPercent = :minDiscount
                 ORDER BY m.discountPercent DESC, g.recommendations DESC NULLS LAST
             """)
     Page<GameEntity> findGamesByMinDiscount(@Param("minDiscount") Integer minDiscount, Pageable pageable);
 
     @Query("""
-                SELECT DISTINCT g FROM GameEntity g
+                SELECT g FROM GameEntity g
                 JOIN GameMarketDataEntity m ON g.appId = m.appId
                 WHERE m.finalPrice <= :maxPrice AND m.finalPrice > 0
                 ORDER BY g.recommendations DESC NULLS LAST
@@ -35,7 +35,7 @@ public interface GameRepository extends JpaRepository<GameEntity, Long>, JpaSpec
     Page<GameEntity> findGamesByMaxPrice(@Param("maxPrice") Integer maxPrice, Pageable pageable);
 
     @Query("""
-                SELECT DISTINCT g FROM GameEntity g
+                SELECT g FROM GameEntity g
                 JOIN GameMarketDataEntity m ON g.appId = m.appId
                 WHERE m.discountPercent > 0
                 ORDER BY m.discountPercent DESC, g.recommendations DESC NULLS LAST

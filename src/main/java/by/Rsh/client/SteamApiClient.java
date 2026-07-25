@@ -3,6 +3,7 @@ package by.Rsh.client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -24,18 +25,37 @@ public class SteamApiClient {
 
     //=====PARAMETERLESS REQUESTS=====
 
-    public String getBestsellersIds() {
+    private String fetchCategoryData(String categoryName) {
         try {
             return client
                     .get()
-                    .uri("https://store.steampowered.com/api/getappsincategory/?category=cat_topsellers&cc=us&l=en")
+                    .uri("https://store.steampowered.com/api/getappsincategory/?category={category}&cc=us&l=en", categoryName)
                     .retrieve()
                     .body(String.class);
         } catch (Exception e) {
-            logger.error("Failed to fetch Steam bestsellers: {}", e.getMessage(), e);
+            logger.error("Failed to fetch Steam category [{}]: {}", categoryName, e.getMessage(), e);
         }
         return null;
     }
+
+    public String getBestsellersIds() {
+        return fetchCategoryData("cat_topsellers");
+    }
+
+    public String getNewReleasesIds() {
+        return fetchCategoryData("cat_newreleases");
+    }
+
+    public String getSpecialsIds() {
+        return fetchCategoryData("cat_specials");
+    }
+
+    public String getUpcomingIds() {
+        return fetchCategoryData("cat_upcoming");
+    }
+
+    //=====API KEY REQUESTS=====
+
     public String getTop100popularIds() {
         try {
             return client
@@ -84,5 +104,19 @@ public class SteamApiClient {
         logger.error("Failed to fetch detailed data for id [{}]: {}", appId, e.getMessage(), e);
     }
         return null;
+    }
+
+    public boolean isImageValid(String imageUrl) {
+        try {
+            ResponseEntity<Void> response = client.head()
+                    .uri(imageUrl)
+                    .retrieve()
+                    .toEntity(Void.class);
+
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            logger.warn("Image checked: NOT found or error for URL: {}", imageUrl);
+            return false;
+        }
     }
 }

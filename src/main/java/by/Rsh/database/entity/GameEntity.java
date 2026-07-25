@@ -27,7 +27,7 @@ public class GameEntity {
     private String type;
     @Column(columnDefinition = "TEXT")
     private String description;
-    private Integer recommendations;
+    private int recommendations;
     private Boolean windows;
     private Boolean mac;
     private Boolean linux;

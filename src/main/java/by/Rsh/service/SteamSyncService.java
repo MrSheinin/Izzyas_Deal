@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,6 +36,7 @@ public class SteamSyncService {
     private final GameRepository gameRepository;
     private final GameMarketDataRepository gameMarketDataRepository;
     private final GenreRepository genreRepository;
+    private final GenreService genreService;
 
     /**
      * Main synchronization pipeline triggered on application startup.
@@ -75,10 +77,19 @@ public class SteamSyncService {
         for (Long appId : filteredAppIds) {
             try {
                 if (!existingAppIds.contains(appId)) {
+
+                    String posterUrl = steamClient.getPosterLink(appId);
+
+                    if (!steamClient.isImageValid(posterUrl)) {
+                        log.warn("Skipping game ID {}: Poster image does not exist (404).", appId);
+                        continue; // Уходим на следующий круг, игнорируя эту игру
+                    }
+
+
                     SteamGameDetailsDto gameDetailsDto = loadGameDetails(appId);
                     if (gameDetailsDto != null) {
                         GameEntity gameEntity = entityMappers.toEntity(appId, gameDetailsDto);
-                        gameEntity.setHeaderImageUrl(steamClient.getPosterLink(appId));
+                        gameEntity.setHeaderImageUrl(posterUrl);
 
                         Set<GenreEntity> managedGenres = getOrCreateGenres(gameDetailsDto.getGenres());
                         gameEntity.setGenres(managedGenres);
@@ -97,10 +108,25 @@ public class SteamSyncService {
         }
 
         // 4. Update dynamic market data (Prices/Discounts)
+        Set<Long> actualGameIdsInDb = gameRepository.findAllIds();
+
         log.info("Updating market prices for {} valid games...", filteredAppIds.size());
+
         for (Long validAppId : filteredAppIds) {
             try {
+
+                // Если игра была отсечена на Шаге 3 из-за отсутствия картинки,
+                // её не будет в actualGameIdsInDb, и этот FIX #1 отработает штатно.
+                if (!actualGameIdsInDb.contains(validAppId)) {
+                    log.warn(
+                            "Skipping market data update. Game {} does not exist in DB.",
+                            validAppId
+                    );
+                    continue;
+                }
+
                 SteamPriceDto priceDto = allPricesMap.get(validAppId);
+
                 if (priceDto != null) {
                     gameMarketDataRepository.upsertMarketData(
                             validAppId,
@@ -110,35 +136,42 @@ public class SteamSyncService {
                             LocalDateTime.now()
                     );
                 }
+
             } catch (Exception e) {
-                log.error("Failed to upsert market data for appId {}: {}", validAppId, e.getMessage(), e);
+                log.error(
+                        "Failed to upsert market data for appId {}: {}",
+                        validAppId,
+                        e.getMessage(),
+                        e
+                );
             }
         }
-        log.info("Steam synchronization pipeline completed successfully.");
     }
 
     //==========HELPERS==========
+    private List<Long> loadGameIds() {
+        List<String> rawJsons = List.of(
+                fetchJsonSafe(steamClient::getBestsellersIds, "bestsellers"),
+                fetchJsonSafe(steamClient::getNewReleasesIds, "new releases"),
+                fetchJsonSafe(steamClient::getSpecialsIds, "specials"),
+                fetchJsonSafe(steamClient::getUpcomingIds, "upcoming"),
+                fetchJsonSafe(steamClient::getTop100popularIds, "popular games")
+        );
+
+        return jsonMappers.toSteamGameIdsDto(rawJsons).getAppIds();
+    }
 
     /**
-     * Aggregates App IDs from multiple Steam Storefront endpoints.
+     * Helper to safely execute API calls without breaking the whole batch if one endpoint fails.
      */
-    private List<Long> loadGameIds() {
-        String bestsellersJson;
+    private String fetchJsonSafe(Supplier<String> apiCall, String targetName) {
         try {
-            bestsellersJson = steamClient.getBestsellersIds();
+            String result = apiCall.get();
+            return result != null ? result : "";
         } catch (Exception e) {
-            log.error("Failed to fetch bestsellers: {}", e.getMessage());
-            bestsellersJson = "";
+            log.error("Failed to fetch {}: {}", targetName, e.getMessage());
+            return "";
         }
-        String popularGamesJson;
-        try {
-            popularGamesJson = steamClient.getTop100popularIds();
-        } catch (Exception e) {
-            log.error("Failed to fetch popular games: {}", e.getMessage());
-            popularGamesJson = "";
-        }
-
-        return jsonMappers.toSteamGameIdsDto(List.of(bestsellersJson, popularGamesJson)).getAppIds();
     }
 
     /**
@@ -164,6 +197,7 @@ public class SteamSyncService {
                 log.error("Error loading price batch at index {}: {}", i, e.getMessage(), e);
             }
         }
+
         return allPricesMap;
     }
 

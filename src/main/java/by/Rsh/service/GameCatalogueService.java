@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+
 @Service
 @RequiredArgsConstructor
 public class GameCatalogueService {
@@ -27,26 +28,28 @@ public class GameCatalogueService {
     private final ToDeliveryDtoMappers mappers;
 
 
+    private final int SIZE_CONST = 20;
+
     //==========================
     // -BASIC METHODS (HEADER)-
     //==========================
-    public Page<GameCardDto> getActualGames(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<GameCardDto> getActualGames(int page) {
+        Pageable pageable = PageRequest.of(page, SIZE_CONST);
         return mapGamesToCardDto(gameRepository.findByIsComingSoonFalseOrderByReleaseDateParsedDesc(pageable), pageable);
     }
 
-    public Page<GameCardDto> getAllGamesWithAnyDiscount(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<GameCardDto> getAllGamesWithAnyDiscount(int page) {
+        Pageable pageable = PageRequest.of(page, SIZE_CONST);
         return mapGamesToCardDto(gameRepository.findGamesWithAnyDiscount(pageable), pageable);
     }
 
-    public Page<GameCardDto> getGamesByMinDiscount(Integer minDiscount, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<GameCardDto> getGamesByMinDiscount(Integer minDiscount, int page) {
+        Pageable pageable = PageRequest.of(page, SIZE_CONST);
         return mapGamesToCardDto(gameRepository.findGamesByMinDiscount(minDiscount, pageable), pageable);
     }
 
-    public Page<GameCardDto> getGamesByMaxPrice(Integer maxPrice, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<GameCardDto> getGamesByMaxPrice(Integer maxPrice, int page) {
+        Pageable pageable = PageRequest.of(page, SIZE_CONST);
         return mapGamesToCardDto(gameRepository.findGamesByMaxPrice(maxPrice * 100, pageable), pageable);
     }
 
@@ -54,8 +57,8 @@ public class GameCatalogueService {
     //======================
     // -SPECIFIED FILTER-
     //======================
-    public Page<GameCardDto> getGamesBySpecifiedFilter(GameSearchFilterDto filterDto, int page, int size) {
-        if (filterDto == null) return getActualGames(page, size);
+    public Page<GameCardDto> getGamesBySpecifiedFilter(GameSearchFilterDto filterDto, int page) {
+        if (filterDto == null) return getActualGames(page);
 
         Specification<GameEntity> spec = Specification.where(GameSpecs.isNotComingSoon());
 
@@ -68,9 +71,9 @@ public class GameCatalogueService {
                 .and(GameSpecs.releasedAfterYear(filterDto.getStartReleaseYear()))
                 .and(GameSpecs.hasGenres(filterDto.getGenreIds()));
 
-        Sort sort = Sort.by(Sort.Order.desc("recommendations").nullsLast());
+        Sort sort = Sort.by(Sort.Order.desc("recommendations"));
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, SIZE_CONST, sort);
 
         return mapGamesToCardDto(gameRepository.findAll(spec, pageable), pageable);
     }

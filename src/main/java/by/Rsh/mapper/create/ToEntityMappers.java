@@ -9,16 +9,20 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ToEntityMappers {
-    public GameEntity toEntity(Long appId, SteamGameDetailsDto dto){
+    public GameEntity toEntity(Long appId, SteamGameDetailsDto dto) {
         if (dto == null) {
             return null;
         }
+        Integer recommendations =
+                dto.getRecommendations() == null
+                        ? 0
+                        : dto.getRecommendations();
         return GameEntity.builder()
                 .appId(appId)
                 .name(dto.getName())
                 .type(dto.getType())
                 .description(dto.getDescription())
-                .recommendations(dto.getRecommendations())
+                .recommendations(recommendations)
                 .windows(dto.getWindows())
                 .mac(dto.getMac())
                 .linux(dto.getLinux())
@@ -28,7 +32,7 @@ public class ToEntityMappers {
                 .build();
     }
 
-    public GameMarketDataEntity toEntity(Long appId, SteamPriceDto dto){
+    public GameMarketDataEntity toEntity(Long appId, SteamPriceDto dto) {
         if (dto == null) {
             return null;
         }
